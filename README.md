@@ -3,25 +3,26 @@ flickr-uploader
 
 Upload a directory of media to Flickr to use as a backup to your local storage.
 
-Features:
-Uploads both images and movies (JPG, PNG, GIF, AVI, MOV files)
-Stores image information locally using a simple SQLite database
-Automatically creates "Sets" based on the folder name the media is in
-Ignores ".picasabackup" directory
-Automatically removes images from Flickr when they are removed from your local hard drive
+## Features:
+* Uploads both images and movies (JPG, PNG, GIF, AVI, MOV files)
+* Stores image information locally using a simple SQLite database
+* Automatically creates "Sets" based on the folder name the media is in
+* Ignores ".picasabackup" directory
+* Automatically removes images from Flickr when they are removed from your local hard drive
 
-Requirements:
+## Requirements:
 
-Python 2.7+
-File write access (for the token and local database)
-Flickr API key (free)
+* Python 2.7+
+* File write access (for the token and local database)
+* Flickr API key (free)
 
-Setup:
-1. Go to http://www.flickr.com/services/apps/create/apply and apply for an API key
-2. Edit the following variables near the top in the script:
+## Setup:
+Go to http://www.flickr.com/services/apps/create/apply and apply for an API key
+Edit the following variables near the top in the script:
 
-FILES_DIR = "files/"
-FLICKR = {
+
+* FILES_DIR = "files/"
+* FLICKR = {
         "title"                 : "",
         "description"           : "",
         "tags"                  : "auto-upload",
@@ -29,13 +30,13 @@ FLICKR = {
         "is_friend"             : "0",
         "is_family"             : "1" 
         }
-SLEEP_TIME = 1 * 60
-DRIP_TIME = 1 * 60
-DB_PATH = os.path.join(FILES_DIR, "fickerdb")
-FLICKR["api_key"] = ""
-FLICKR["secret"] = ""
+* SLEEP_TIME = 1 * 60
+* DRIP_TIME = 1 * 60
+* DB_PATH = os.path.join(FILES_DIR, "fickerdb")
+* FLICKR["api_key"] = ""
+* FLICKR["secret"] = ""
 
-3. Place the file uploadr.py in any directory and run:
+Place the file uploadr.py in any directory and run:
 
 $ ./uploadr.py
 
