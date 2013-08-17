@@ -40,6 +40,7 @@
 
    Inspired by:
         http://micampe.it/things/flickruploadr
+        https://github.com/joelmx/flickrUploadr/blob/master/python3/uploadr.py
 
    Usage:
 
