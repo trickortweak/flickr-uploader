@@ -88,7 +88,7 @@ import itertools
 #
 # Location to scan for new files
 #
-FILES_DIR = "<enter directory with media>"
+FILES_DIR = ""
 #
 #   Flickr settings
 #
@@ -222,9 +222,7 @@ class Uploadr:
         """
         d =  {
             "frob"            : FLICKR[ "frob" ],
-            "perms"           : "delete",
-            "format"          : "json",
-            "nojsoncallback"    : "1"
+            "perms"           : "delete"
             }
         sig = self.signCall( d )
         url = self.urlGen( api.auth, d, sig )
@@ -821,6 +819,16 @@ if __name__ == "__main__":
 
     flick = Uploadr()
     
+    if FILES_DIR == "":
+        print("Please configure the name of the folder in the script with media available to sync with Flickr.")
+        sys.exit()    
+
+    if FLICKR["api_key"] == "" or FLICKR["secret"] == "":
+        print("Please enter an API key and secret in the script file (see README).")
+        sys.exit()
+    
+
+        
     flick.setupDB()
 
     if args.daemon:
