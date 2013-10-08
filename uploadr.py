@@ -230,12 +230,16 @@ class Uploadr:
         ans = ""
         try:
             webbrowser.open( url )
+            # NJO: Print URL to allow validation of the token
+            print(url)
             ans = raw_input("Have you authenticated this application? (Y/N): ")
         except:
             print(str(sys.exc_info()))
         if ( ans.lower() == "n" ):
             print("You need to allow this program to access your Flickr site.")
             print("A web browser should pop open with instructions.")
+            # NJO: Print URL to allow validation of the token
+            print(url)
             print("After you have allowed access restart uploadr.py")
             sys.exit()
 
@@ -353,6 +357,8 @@ class Uploadr:
         if ( not self.checkToken() ):
             self.authenticate()
         con = lite.connect(DB_PATH)
+        # NJO: Allow special characters
+        con.text_factory = str
         
         with con:
             cur = con.cursor()    
@@ -388,10 +394,14 @@ class Uploadr:
         for dirpath, dirnames, filenames in os.walk( FILES_DIR, followlinks=True):
             if '.picasaoriginals' in dirnames:
                 dirnames.remove('.picasaoriginals')
+            # NJO: Avoid uploading PhotoStation thumbnails
+            if '@eaDir' in dirnames:
+                dirnames.remove('@eaDir')
             for f in filenames :
                 ext = f.lower().split(".")[-1]
-                if ( ext == "jpg" or ext == "png"):
-                #if ( ext == "jpg" or ext == "png" or ext == "avi" or ext == "mov" or ext == "mpg"):
+                # NJO: Allow videos upload
+                #if ( ext == "jpg" or ext == "png"):
+                if ( ext == "jpg" or ext == "png" or ext == "avi" or ext == "mov" or ext == "mpg" or ext == "mp4"):
                     files.append( os.path.normpath( dirpath + "/" + f ) )
         files.sort()
         return files
@@ -402,10 +412,12 @@ class Uploadr:
 
         success = False
         con = lite.connect(DB_PATH)
+        # NJO: Allow special characters
+        con.text_factory = str
         fileMd5 = self.md5Checksum(file)
         with con:
-            cur = con.cursor()    
-            cur.execute("SELECT rowid,files_id,path,set_id,md5,tagged FROM files WHERE path = ?", (file,))        
+            cur = con.cursor()
+            cur.execute("SELECT rowid,files_id,path,set_id,md5,tagged FROM files WHERE path = ?", (file,))
             row = cur.fetchone()
             
             if(row is None):
@@ -484,6 +496,7 @@ class Uploadr:
             print(str(sys.exc_info()))
         
         return success
+
     def deleteFile( self, file, cur ):
         success = False
         print "Deleting file: " + str(file[1])
@@ -506,9 +519,11 @@ class Uploadr:
                 # Find out if the file is the last item in a set, if so, remove the set from the local db
                 cur.execute("SELECT set_id FROM files WHERE files_id = ?", (file[0],))
                 row = cur.fetchone()
-                cur.execute("SELECT set_id FROM files WHERE set_id = ?", (file[0],))
+                # NJO: Fix query, it always returned nothing and it was removing a set containing photos from DB!!!
+                cur.execute("SELECT set_id FROM files WHERE set_id = ?", (row[0],))
                 rows = cur.fetchall()
-                if(len(rows) == 0):
+                # NJO: Since file is not yet removed then test if we only have 1 entry
+                if(len(rows) == 1):
                     print "File is the last of the set, deleting the set ID: " + str(row[0]) 
                     cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
                 
@@ -523,6 +538,7 @@ class Uploadr:
                 else :
                     self.reportError( res )
         except:
+            # NJO: If you get 'attempt to write a readonly database', set 'admin' as owner of the DB file (fickerdb) and 'users' as group
             print(str(sys.exc_info()))
         return success               
 
@@ -582,7 +598,6 @@ class Uploadr:
         content_type = 'multipart/form-data; boundary=%s' % BOUNDARY        # XXX what if no files are encoded
         return content_type, body
 
-
     def isGood( self, res ):
         """ isGood
         """
@@ -591,7 +606,6 @@ class Uploadr:
             return True
         else :
             return False
-
 
     def reportError( self, res ):
         """ reportError
@@ -615,7 +629,6 @@ class Uploadr:
             print e.args 
         return json.loads(res)
 
-
     def run( self ):
         """ run
         """
@@ -629,7 +642,8 @@ class Uploadr:
         print('*****Creating Sets*****')
         
         con = lite.connect(DB_PATH)
-
+        # NJO: Allow special characters
+        con.text_factory = str
         with con:    
     
             cur = con.cursor()    
@@ -682,13 +696,15 @@ class Uploadr:
                 if ( res['code'] == 1 ) :
                     print "Photoset not found, creating new set..."
                     head, setName = os.path.split(os.path.dirname(file[1]))
-                    self.createSet( setName, file[0], cur)
+                    # NJO: Fix this method call by adding missing parameter
+                    con = lite.connect(DB_PATH)
+                    con.text_factory = str
+                    self.createSet( setName, file[0], cur, con)
                 else :
                     self.reportError( res )
         except:
             print(str(sys.exc_info()))
-            
-        
+
     def createSet( self, setName, primaryPhotoId, cur, con):
         print "Creating new set: " + str(setName)
         
@@ -703,9 +719,11 @@ class Uploadr:
                 "title"               : setName
             
             }
+
+
             sig = self.signCall( d )
+
             url = self.urlGen( api.rest, d, sig )
-       
             res = self.getResponse( url )
             if ( self.isGood( res ) ):
                 self.logSetCreation( res["photoset"]["id"], setName, primaryPhotoId, cur, con )
@@ -722,6 +740,8 @@ class Uploadr:
         try:
             print DB_PATH
             con = lite.connect(DB_PATH)
+            # NJO: Allow special characters
+            con.text_factory = str
             cur = con.cursor() 
             cur.execute('create table if not exists files (files_id int, path text, set_id int, md5 text, tagged int)')
             cur.execute('create table if not exists sets (set_id int, name text, primary_photo_id INTEGER)')
@@ -749,6 +769,8 @@ class Uploadr:
         print('*****Adding tags to existing photos*****')
         
         con = lite.connect(DB_PATH)
+        # NJO: Allow special characters
+        con.text_factory = str
 
         with con:    
     
@@ -795,7 +817,39 @@ class Uploadr:
         except:
             print(str(sys.exc_info()))
         return False
+
+    # NJO: Add a method to clean unused sets
+    def repairSetsTable( self ) :
+        print('*****Repairing Sets table*****')
+        
+        con = lite.connect(DB_PATH)
+        # NJO: Allow special characters
+        con.text_factory = str
+        with con:    
     
+            cur = con.cursor()
+            cur.execute("SELECT set_id, name FROM sets WHERE set_id NOT IN (SELECT set_id FROM files)")
+            unusedsets = cur.fetchall()
+            
+            for row in unusedsets:
+                print("Unused set spotted about to be deleted:" + str(row[0]) + "(" + row[1] + ")")
+                cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
+            con.commit()
+
+        print('*****Completed repairing Sets table*****')
+    
+    # NJO: Display Sets
+    def displaySets( self ) :
+        con = lite.connect(DB_PATH)
+        # NJO: Allow special characters
+        con.text_factory = str
+        with con:    
+            cur = con.cursor()
+            cur.execute("SELECT set_id, name FROM sets")
+            allsets = cur.fetchall()
+            for row in allsets:
+                print("Set: " + str(row[0]) + "(" + row[1] + ")")
+	
 if __name__ == "__main__":
     # Ensure that only once instance of this script is running
     f = open ('lock', 'w')
@@ -837,6 +891,9 @@ if __name__ == "__main__":
     else:
         if ( not flick.checkToken() ):
             flick.authenticate()
+        # NJO: Repair Sets table if needed
+        #flick.displaySets()
+        flick.repairSetsTable()
         flick.upload()
         flick.removeDeletedMedia()
         flick.createSets()
