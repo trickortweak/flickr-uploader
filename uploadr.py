@@ -123,6 +123,10 @@ EXCLUDED_FOLDERS = ["@eaDir","#recycle",".picasaoriginals","_ExcludeSync","Corel
 #
 ALLOWED_EXT = ["jpg","png","avi","mov","mpg","mp4"]
 #
+#   Files greater than this value won't be uploaded (1Mo = 1000000)
+#
+FILE_MAX_SIZE = 50000000
+#
 #   Your own API key and secret message
 #
 FLICKR["api_key"] = ""
@@ -412,7 +416,9 @@ class Uploadr:
             for f in filenames :
                 ext = f.lower().split(".")[-1]
                 if ext in ALLOWED_EXT:
-                    files.append( os.path.normpath( dirpath + "/" + f ) )
+                    fileSize = os.path.getsize( dirpath + "/" + f )
+                    if (fileSize < FILE_MAX_SIZE):
+                        files.append( os.path.normpath( dirpath + "/" + f ) )
         files.sort()
         return files
 
