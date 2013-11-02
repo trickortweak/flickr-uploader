@@ -59,7 +59,7 @@ if sys.version_info < (2,7):
   sys.stderr.write("Current version: " + sys.version + "\n")
   sys.stderr.flush()
   sys.exit(1)
-  
+
 import argparse
 import hashlib
 import mimetools
@@ -114,7 +114,17 @@ DRIP_TIME = 1 * 60
 #   File we keep the history of uploaded files in.
 #
 DB_PATH = os.path.join(FILES_DIR, "fickerdb")
-
+#
+#   List of folder names you don't want to parse
+#
+EXCLUDED_FOLDERS = ["@eaDir","#recycle",".picasaoriginals","_ExcludeSync","Corel Auto-Preserve","Originals","Automatisch beibehalten von Corel"]
+#
+#   List of file extensions you agree to upload
+#
+ALLOWED_EXT = ["jpg","png","avi","mov","mpg","mp4"]
+#
+#   Your own API key and secret message
+#
 FLICKR["api_key"] = ""
 FLICKR["secret"] = ""
 
@@ -166,6 +176,7 @@ class Uploadr:
 
         f = FLICKR[ "secret" ] + "api_key" + FLICKR[ "api_key" ] + foo
         #f = "api_key" + FLICKR[ "api_key" ] + foo
+
         return hashlib.md5( f ).hexdigest()
 
     def urlGen( self , base,data, sig ):
@@ -230,15 +241,14 @@ class Uploadr:
         ans = ""
         try:
             webbrowser.open( url )
-            # NJO: Print URL to allow validation of the token
+            print("Copy-paste following URL into a web browser and follow instructions:")
             print(url)
             ans = raw_input("Have you authenticated this application? (Y/N): ")
         except:
             print(str(sys.exc_info()))
         if ( ans.lower() == "n" ):
             print("You need to allow this program to access your Flickr site.")
-            print("A web browser should pop open with instructions.")
-            # NJO: Print URL to allow validation of the token
+            print("Copy-paste following URL into a web browser and follow instructions:")
             print(url)
             print("After you have allowed access restart uploadr.py")
             sys.exit()
@@ -357,7 +367,6 @@ class Uploadr:
         if ( not self.checkToken() ):
             self.authenticate()
         con = lite.connect(DB_PATH)
-        # NJO: Allow special characters
         con.text_factory = str
         
         with con:
@@ -378,30 +387,31 @@ class Uploadr:
         
         allMedia = self.grabNewFiles()
         print "Found " + str(len(allMedia)) + " files"
+        coun = 0;
         for i, file in enumerate( allMedia ):
             success = self.uploadFile( file )
             if args.drip_feed and success and i != len( newFiles )-1:
                 print("Waiting " + str(DRIP_TIME) + " seconds before next upload")
                 time.sleep( DRIP_TIME )
+            coun = coun + 1;
+            if (coun%100 == 0):
+                print ("   " + str(coun) + " files processed (uploaded or md5ed)")
+        if (coun%100 > 0):
+            print ("   " + str(coun) + " files processed (uploaded or md5ed)")
         print "*****Completed uploading files*****"
-    
-        
+
     def grabNewFiles( self ): 
         """ grabNewFiles
         """
 
         files = []
         for dirpath, dirnames, filenames in os.walk( FILES_DIR, followlinks=True):
-            if '.picasaoriginals' in dirnames:
-                dirnames.remove('.picasaoriginals')
-            # NJO: Avoid uploading PhotoStation thumbnails
-            if '@eaDir' in dirnames:
-                dirnames.remove('@eaDir')
+            for curr_dir in EXCLUDED_FOLDERS:
+                if curr_dir in dirnames:
+                    dirnames.remove(curr_dir)
             for f in filenames :
                 ext = f.lower().split(".")[-1]
-                # NJO: Allow videos upload
-                #if ( ext == "jpg" or ext == "png"):
-                if ( ext == "jpg" or ext == "png" or ext == "avi" or ext == "mov" or ext == "mpg" or ext == "mp4"):
+                if ext in ALLOWED_EXT:
                     files.append( os.path.normpath( dirpath + "/" + f ) )
         files.sort()
         return files
@@ -412,7 +422,6 @@ class Uploadr:
 
         success = False
         con = lite.connect(DB_PATH)
-        # NJO: Allow special characters
         con.text_factory = str
         fileMd5 = self.md5Checksum(file)
         with con:
@@ -449,7 +458,6 @@ class Uploadr:
                     if ( not res == "" and res.documentElement.attributes['stat'].value == "ok" ):
                         print("Successfully uploaded the file: " + file)
                         # Add to set
-                    
                         cur.execute('INSERT INTO files (files_id, path, md5, tagged) VALUES (?, ?, ?, 1)',(int(str(res.getElementsByTagName('photoid')[0].firstChild.nodeValue)), file, self.md5Checksum(file)))
                         success = True
                     else :
@@ -482,7 +490,6 @@ class Uploadr:
             if ( not res == "" and res.documentElement.attributes['stat'].value == "ok" ):
                 print("Successfully replaced the file: " + file)
                 # Add to set
-            
                 cur.execute('UPDATE files SET md5 = ? WHERE files_id = ?',(fileMd5, file_id))
                 con.commit()
                 success = True
@@ -519,14 +526,12 @@ class Uploadr:
                 # Find out if the file is the last item in a set, if so, remove the set from the local db
                 cur.execute("SELECT set_id FROM files WHERE files_id = ?", (file[0],))
                 row = cur.fetchone()
-                # NJO: Fix query, it always returned nothing and it was removing a set containing photos from DB!!!
                 cur.execute("SELECT set_id FROM files WHERE set_id = ?", (row[0],))
                 rows = cur.fetchall()
-                # NJO: Since file is not yet removed then test if we only have 1 entry
                 if(len(rows) == 1):
                     print "File is the last of the set, deleting the set ID: " + str(row[0]) 
                     cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
-                
+               
                 # Delete file record from the local db
                 cur.execute("DELETE FROM files WHERE files_id = ?", (file[0],))
                 print("Successful deletion.")
@@ -538,7 +543,7 @@ class Uploadr:
                 else :
                     self.reportError( res )
         except:
-            # NJO: If you get 'attempt to write a readonly database', set 'admin' as owner of the DB file (fickerdb) and 'users' as group
+            # If you get 'attempt to write a readonly database', set 'admin' as owner of the DB file (fickerdb) and 'users' as group
             print(str(sys.exc_info()))
         return success               
 
@@ -642,7 +647,6 @@ class Uploadr:
         print('*****Creating Sets*****')
         
         con = lite.connect(DB_PATH)
-        # NJO: Allow special characters
         con.text_factory = str
         with con:    
     
@@ -696,7 +700,6 @@ class Uploadr:
                 if ( res['code'] == 1 ) :
                     print "Photoset not found, creating new set..."
                     head, setName = os.path.split(os.path.dirname(file[1]))
-                    # NJO: Fix this method call by adding missing parameter
                     con = lite.connect(DB_PATH)
                     con.text_factory = str
                     self.createSet( setName, file[0], cur, con)
@@ -736,11 +739,9 @@ class Uploadr:
         return False
             
     def setupDB ( self ):
-        print("Setting up the database")
+        print("Setting up the database: " + DB_PATH)
         try:
-            print DB_PATH
             con = lite.connect(DB_PATH)
-            # NJO: Allow special characters
             con.text_factory = str
             cur = con.cursor() 
             cur.execute('create table if not exists files (files_id int, path text, set_id int, md5 text, tagged int)')
@@ -769,7 +770,6 @@ class Uploadr:
         print('*****Adding tags to existing photos*****')
         
         con = lite.connect(DB_PATH)
-        # NJO: Allow special characters
         con.text_factory = str
 
         with con:    
@@ -818,12 +818,11 @@ class Uploadr:
             print(str(sys.exc_info()))
         return False
 
-    # NJO: Add a method to clean unused sets
+    # Method to clean unused sets
     def repairSetsTable( self ) :
         print('*****Repairing Sets table*****')
         
         con = lite.connect(DB_PATH)
-        # NJO: Allow special characters
         con.text_factory = str
         with con:    
     
@@ -838,10 +837,9 @@ class Uploadr:
 
         print('*****Completed repairing Sets table*****')
     
-    # NJO: Display Sets
+    # Display Sets
     def displaySets( self ) :
         con = lite.connect(DB_PATH)
-        # NJO: Allow special characters
         con.text_factory = str
         with con:    
             cur = con.cursor()
@@ -849,7 +847,8 @@ class Uploadr:
             allsets = cur.fetchall()
             for row in allsets:
                 print("Set: " + str(row[0]) + "(" + row[1] + ")")
-	
+
+print("--------- Start time: " + time.strftime("%c") + " ---------");
 if __name__ == "__main__":
     # Ensure that only once instance of this script is running
     f = open ('lock', 'w')
@@ -881,8 +880,6 @@ if __name__ == "__main__":
     if FLICKR["api_key"] == "" or FLICKR["secret"] == "":
         print("Please enter an API key and secret in the script file (see README).")
         sys.exit()
-    
-
         
     flick.setupDB()
 
@@ -891,10 +888,10 @@ if __name__ == "__main__":
     else:
         if ( not flick.checkToken() ):
             flick.authenticate()
-        # NJO: Repair Sets table if needed
         #flick.displaySets()
         flick.repairSetsTable()
         flick.upload()
         flick.removeDeletedMedia()
         flick.createSets()
         flick.addTagsToUploadedPhotos()
+print("--------- End time: " + time.strftime("%c") + " ---------");
