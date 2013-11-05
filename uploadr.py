@@ -127,6 +127,10 @@ ALLOWED_EXT = ["jpg","png","avi","mov","mpg","mp4"]
 #
 FILE_MAX_SIZE = 50000000
 #
+#   Do you want to verify each time if already uploaded files have been changed?
+#
+MANAGE_CHANGES = True
+#
 #   Your own API key and secret message
 #
 FLICKR["api_key"] = ""
@@ -429,7 +433,6 @@ class Uploadr:
         success = False
         con = lite.connect(DB_PATH)
         con.text_factory = str
-        fileMd5 = self.md5Checksum(file)
         with con:
             cur = con.cursor()
             cur.execute("SELECT rowid,files_id,path,set_id,md5,tagged FROM files WHERE path = ?", (file,))
@@ -474,8 +477,10 @@ class Uploadr:
                             print("Error: " + str( res.toxml() ))
                 except:
                     print(str(sys.exc_info()))
-            elif(fileMd5 != str(row[4])):
-                self.replacePhoto(file, row[1], fileMd5, cur, con);
+            elif (MANAGE_CHANGES):
+                fileMd5 = self.md5Checksum(file)
+                if (fileMd5 != str(row[4])):
+                    self.replacePhoto(file, row[1], fileMd5, cur, con);
             return success
                         
     def replacePhoto ( self, file, file_id, fileMd5, cur, con ) :
