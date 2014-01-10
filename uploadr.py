@@ -234,7 +234,7 @@ class Uploadr:
             else:
                 self.reportError( response )
         except:
-            print("Error getting frob:" + str( sys.exc_info() ))
+            print("Error: cannot get frob:" + str( sys.exc_info() ))
 
     def getAuthKey( self ):
         """
@@ -370,7 +370,7 @@ class Uploadr:
         http://www.flickr.com/services/api/flickr.photos.delete.html
         """
         
-        print "*****Removing deleted files*****"
+        print("*****Removing deleted files*****")
         
         if ( not self.checkToken() ):
             self.authenticate()
@@ -385,16 +385,16 @@ class Uploadr:
             for row in rows:
                 if( not os.path.isfile(row[1])):
                     success = self.deleteFile(row, cur)
-        print "*****Completed deleted files*****"
+        print("*****Completed deleted files*****")
     
     def upload( self ):
         """ upload
         """
         
-        print "*****Uploading files*****"
+        print("*****Uploading files*****")
         
         allMedia = self.grabNewFiles()
-        print "Found " + str(len(allMedia)) + " files"
+        print("Found " + str(len(allMedia)) + " files")
         coun = 0;
         for i, file in enumerate( allMedia ):
             success = self.uploadFile( file )
@@ -403,10 +403,10 @@ class Uploadr:
                 time.sleep( DRIP_TIME )
             coun = coun + 1;
             if (coun%100 == 0):
-                print ("   " + str(coun) + " files processed (uploaded or md5ed)")
+                print("   " + str(coun) + " files processed (uploaded or md5ed)")
         if (coun%100 > 0):
-            print ("   " + str(coun) + " files processed (uploaded or md5ed)")
-        print "*****Completed uploading files*****"
+            print("   " + str(coun) + " files processed (uploaded or md5ed)")
+        print("*****Completed uploading files*****")
 
     def grabNewFiles( self ): 
         """ grabNewFiles
@@ -517,7 +517,7 @@ class Uploadr:
 
     def deleteFile( self, file, cur ):
         success = False
-        print "Deleting file: " + str(file[1])
+        print("Deleting file: " + str(file[1]))
         
         try:
             d = {
@@ -540,7 +540,7 @@ class Uploadr:
                 cur.execute("SELECT set_id FROM files WHERE set_id = ?", (row[0],))
                 rows = cur.fetchall()
                 if(len(rows) == 1):
-                    print "File is the last of the set, deleting the set ID: " + str(row[0]) 
+                    print("File is the last of the set, deleting the set ID: " + str(row[0]))
                     cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
                
                 # Delete file record from the local db
@@ -559,7 +559,7 @@ class Uploadr:
         return success               
 
     def logSetCreation( self, setId, setName, primaryPhotoId, cur, con):
-        print "adding set to log: " + str(setName)
+        print("adding set to log: " + str(setName))
         
         success = False
         cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)", (setId,setName,primaryPhotoId))        
@@ -640,9 +640,9 @@ class Uploadr:
         try:
             res = urllib2.urlopen( url ).read()
         except urllib2.HTTPError, e:
-            print e.code
+            print(e.code)
         except urllib2.URLError, e:
-            print e.args 
+            print(e.args)
         return json.loads(res)
 
     def run( self ):
@@ -676,13 +676,12 @@ class Uploadr:
                 
                 if set == None:
                     setId = self.createSet(setName, row[0], cur, con)  
-                    print "Created the set: " + setName
+                    print("Created the set: " + setName)
                     newSetCreated = True                  
                 else :
                     setId = set[0]
                     
                 if row[2] == None and newSetCreated == False :
-                    print "adding file to set"
                     self.addFileToSet(setId, row, cur)
         print('*****Completed creating sets*****')
     
@@ -703,13 +702,13 @@ class Uploadr:
             res = self.getResponse( url )
             if ( self.isGood( res ) ):
             
-                print("Successfully added file to set.")
+                print("Successfully added file " + str(file[1]) + " to its set.")
                 
                 cur.execute("UPDATE files SET set_id = ? WHERE files_id = ?", (setId, file[0]))        
                         
             else :
                 if ( res['code'] == 1 ) :
-                    print "Photoset not found, creating new set..."
+                    print("Photoset not found, creating new set...")
                     head, setName = os.path.split(os.path.dirname(file[1]))
                     con = lite.connect(DB_PATH)
                     con.text_factory = str
@@ -720,7 +719,7 @@ class Uploadr:
             print(str(sys.exc_info()))
 
     def createSet( self, setName, primaryPhotoId, cur, con):
-        print "Creating new set: " + str(setName)
+        print("Creating new set: " + str(setName))
         
         try:
             d = {
@@ -743,7 +742,7 @@ class Uploadr:
                 self.logSetCreation( res["photoset"]["id"], setName, primaryPhotoId, cur, con )
                 return res["photoset"]["id"]
             else :
-                print d
+                print(d)
                 self.reportError( res )
         except:
             print(str(sys.exc_info()))
@@ -751,6 +750,7 @@ class Uploadr:
             
     def setupDB ( self ):
         print("Setting up the database: " + DB_PATH)
+        con = None
         try:
             con = lite.connect(DB_PATH)
             con.text_factory = str
@@ -760,12 +760,12 @@ class Uploadr:
             con.commit()
             con.close()
         except lite.Error, e:
-            print "Error %s:" % e.args[0]
+            print("Error: %s" % e.args[0])
+            if con != None:
+                con.close()
             sys.exit(1)
         finally:
-            if con:
-                con.close()
-                print("Completed database setup")
+            print("Completed database setup")
                 
     def md5Checksum(self, filePath):
         with open(filePath, 'rb') as fh:
@@ -797,12 +797,12 @@ class Uploadr:
                     status = self.addTagToPhoto(row, setName, cur, con)
                     
                     if status == False:
-                        print "Error adding tag to file: " + file[1]
+                        print("Error: cannot add tag to file: " + file[1])
                                          
         print('*****Completed adding tags*****')
     
     def addTagToPhoto(self, file, tagName, cur, con) :
-        print "Adding tag " + tagName + " to photo: " + str(file[1]) + " (" + str(file[0]) + ")"
+        print("Adding tag " + tagName + " to photo: " + str(file[1]) + " (" + str(file[0]) + ")")
         
         try:
             d = {
@@ -823,15 +823,15 @@ class Uploadr:
                 con.commit()
                 return True
             else :
-                print d
+                print(d)
                 self.reportError( res )
         except:
             print(str(sys.exc_info()))
         return False
 
     # Method to clean unused sets
-    def repairSetsTable( self ) :
-        print('*****Repairing Sets table*****')
+    def removeUselessSetsTable( self ) :
+        print('*****Removing empty Sets from DB*****')
         
         con = lite.connect(DB_PATH)
         con.text_factory = str
@@ -846,7 +846,7 @@ class Uploadr:
                 cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
             con.commit()
 
-        print('*****Completed repairing Sets table*****')
+        print('*****Completed removing empty Sets from DB*****')
     
     # Display Sets
     def displaySets( self ) :
@@ -858,6 +858,41 @@ class Uploadr:
             allsets = cur.fetchall()
             for row in allsets:
                 print("Set: " + str(row[0]) + "(" + row[1] + ")")
+
+    # Get sets from Flickr
+    def getFlickrSets(self):
+        print('*****Adding Flickr Sets to DB*****')
+        con = lite.connect(DB_PATH)
+        con.text_factory = str
+        try:
+            d = {
+                "auth_token"          : str(self.token),
+                "perms"               : str(self.perms),
+                "format"              : "json",
+                "nojsoncallback"      : "1",
+                "method"              : "flickr.photosets.getList"
+            }
+            url = self.urlGen(api.rest, d, self.signCall(d))
+            res = self.getResponse(url)
+            if (self.isGood(res)):
+                cur = con.cursor()
+                for row in res['photosets']['photoset']:
+                    setId = row['id']
+                    setName = row['title']['_content']
+                    primaryPhotoId = row['primary']
+                    cur.execute("SELECT set_id FROM sets WHERE set_id = '" + setId + "'")
+                    foundSets = cur.fetchone()
+                    if foundSets == None:
+                        print("   Adding set " + setId + ": " + setName + " (primary=" + primaryPhotoId + ")")
+                        cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)", (setId, setName, primaryPhotoId))
+                con.commit()
+                con.close()
+            else:
+                print(d)
+                self.reportError(res)
+        except:
+            print(str(sys.exc_info()))
+        print('*****Completed adding Flickr Sets to DB*****')
 
 print("--------- Start time: " + time.strftime("%c") + " ---------");
 if __name__ == "__main__":
@@ -900,7 +935,8 @@ if __name__ == "__main__":
         if ( not flick.checkToken() ):
             flick.authenticate()
         #flick.displaySets()
-        flick.repairSetsTable()
+        flick.removeUselessSetsTable()
+        flick.getFlickrSets()
         flick.upload()
         flick.removeDeletedMedia()
         flick.createSets()
