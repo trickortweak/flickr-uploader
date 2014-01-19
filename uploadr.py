@@ -883,7 +883,7 @@ class Uploadr:
                     cur.execute("SELECT set_id FROM sets WHERE set_id = '" + setId + "'")
                     foundSets = cur.fetchone()
                     if foundSets == None:
-                        print("   Adding set " + setId + ": " + setName + " (primary=" + primaryPhotoId + ")")
+                        print("   Adding set ", setId, setName, primaryPhotoId)
                         cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)", (setId, setName, primaryPhotoId))
                 con.commit()
                 con.close()
