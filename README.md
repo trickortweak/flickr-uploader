@@ -20,7 +20,7 @@ THIS SCRIPT IS PROVIDED WITH NO WARRANTY WHATSOEVER. PLEASE REVIEW THE SOURCE CO
 
 ## Setup:
 Go to http://www.flickr.com/services/apps/create/apply and apply for an API key
-Edit the following variables near the top in the script:
+Edit the following variables in the uploadr.ini:
 
 
 * FILES_DIR = "files/"
@@ -30,7 +30,9 @@ Edit the following variables near the top in the script:
         "tags"                  : "auto-upload",
         "is_public"             : "0",
         "is_friend"             : "0",
-        "is_family"             : "0" 
+        "is_family"             : "0",
+        "api_key"               : "Yourkey",
+        "secret"                : "YourSecret"
         }
 * SLEEP_TIME = 1 * 60
 * DRIP_TIME = 1 * 60
