@@ -57,6 +57,6 @@ It will crawl through all the files from the FILES_DIR directory and begin the u
 * Q: Are you a python ninja?
 * A: No, sorry. I just picked up the language to write this script because python can easily be installed on a Synology Diskstation.
 
-* Q: Is this script feature compute and fully tested?
+* Q: Is this script feature complete and fully tested?
 * A: Nope. It's a work in progress. I've tested it as needed for my needs, but it's possible to build additional features by contributing to the script.
 
