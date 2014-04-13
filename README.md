@@ -60,3 +60,6 @@ It will crawl through all the files from the FILES_DIR directory and begin the u
 * Q: Is this script feature complete and fully tested?
 * A: Nope. It's a work in progress. I've tested it as needed for my needs, but it's possible to build additional features by contributing to the script.
 
+* Q: How to automate it with a Synology NAS ?
+* A: With DSM 5, create an automate task, make it run once a day for example, and put this in the textbox without quotes "/usr/local/python/bin/python path_to_your_script"
+for ie, "/usr/local/python/bin/python /volume1/script/flickr-uploader/uploadr.py"
