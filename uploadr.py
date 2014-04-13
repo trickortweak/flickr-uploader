@@ -85,7 +85,7 @@ import itertools
 
 import ConfigParser
 config = ConfigParser.ConfigParser()
-config.read('uploadr.ini')
+config.read(os.path.join(os.path.dirname(sys.argv[0]), "uploadr.ini"))
 FILES_DIR = eval(config.get('Config','FILES_DIR'))
 FLICKR = eval(config.get('Config','FLICKR'))
 SLEEP_TIME = eval(config.get('Config','SLEEP_TIME'))
