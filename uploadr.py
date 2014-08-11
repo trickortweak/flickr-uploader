@@ -72,10 +72,12 @@ import webbrowser
 import sqlite3 as lite
 import pprint
 import json
+from PIL import Image
 from xml.dom.minidom import parse
 import hashlib
 import fcntl
 import errno
+import subprocess
 from sys import stdout
 import itertools
 
@@ -95,9 +97,11 @@ LOCK_PATH = eval(config.get('Config','LOCK_PATH'))
 TOKEN_PATH = eval(config.get('Config','TOKEN_PATH'))
 EXCLUDED_FOLDERS = eval(config.get('Config','EXCLUDED_FOLDERS'))
 ALLOWED_EXT = eval(config.get('Config','ALLOWED_EXT'))
+RAW_EXT = eval(config.get('Config','RAW_EXT'))
 FILE_MAX_SIZE = eval(config.get('Config','FILE_MAX_SIZE'))
 MANAGE_CHANGES = eval(config.get('Config','MANAGE_CHANGES'))
-
+RAW_TOOL_PATH = eval(config.get('Config','RAW_TOOL_PATH'))
+CONVERT_RAW_FILES = eval(config.get('Config','CONVERT_RAW_FILES'))
 
 #print FILES_DIR
 #print FLICKR
@@ -383,6 +387,55 @@ class Uploadr:
             print("   " + str(coun) + " files processed (uploaded or md5ed)")
         print("*****Completed uploading files*****")
 
+    def convertRawFiles( self ):
+        """ convertRawFiles
+        """
+        if CONVERT_RAW_FILES.lower() != "true":
+            return
+
+        print "*****Converting files*****"
+        for ext in RAW_EXT:
+            print ("About to convert files with extension:" + ext + " files.")
+        
+            for dirpath, dirnames, filenames in os.walk( FILES_DIR, followlinks=True):
+                if '.picasaoriginals' in dirnames:
+                    dirnames.remove('.picasaoriginals')
+                if  '@eaDir' in dirnames:
+                    dirnames.remove('@eaDir')
+                for f in filenames :
+                    
+                    fileExt = f.split(".")[-1]
+                    filename = f.split(".")[0]
+                    if ( fileExt.lower() == ext):
+                        
+                        if (not os.path.exists(dirpath + "/" + filename + ".JPG")):
+                            print("About to create JPG from raw "+ dirpath + "/" + f )
+                            
+                            flag = ""
+                            if ext is "cr2":
+                                flag = "PreviewImage"
+                            else :
+                                flag = "JpgFromRaw"
+                            
+                            command = RAW_TOOL_PATH +"exiftool -b -" + flag + " -w .JPG -ext " + ext + " -r '" + dirpath + "/" + filename + "." + fileExt + "'"
+                            #print(command)
+                        
+                            p = subprocess.call(command, shell=True)
+                        
+                        if (not os.path.exists(dirpath + "/" + filename + ".JPG_original")):
+                            print ("About to copy tags from "+ dirpath + "/" + f + " to JPG.")
+                        
+                            command = RAW_TOOL_PATH + "exiftool -tagsfromfile '" + dirpath + "/" + f + "' -r -all:all -ext JPG '" + dirpath + "/" + filename + ".JPG'"
+                            #print(command)
+                        
+                            p = subprocess.call(command, shell=True)
+                        
+                            print ("Finished copying tags.")
+            
+            
+            print ("Finished converting files with extension:" + ext + ".")
+
+        print "*****Completed converting files*****"
     def grabNewFiles( self ):
         """ grabNewFiles
         """
@@ -397,7 +450,7 @@ class Uploadr:
                 if ext in ALLOWED_EXT:
                     fileSize = os.path.getsize( dirpath + "/" + f )
                     if (fileSize < FILE_MAX_SIZE):
-                        files.append( os.path.normpath( dirpath + "/" + f ) )
+                        files.append( os.path.normpath( dirpath + "/" + f ).replace("'", "\'") )
         files.sort()
         return files
 
@@ -657,6 +710,7 @@ class Uploadr:
                     setId = set[0]
 
                 if row[2] == None and newSetCreated == False :
+                    print "adding file to set " + row[1]
                     self.addFileToSet(setId, row, cur)
         print('*****Completed creating sets*****')
 
@@ -688,6 +742,9 @@ class Uploadr:
                     con = lite.connect(DB_PATH)
                     con.text_factory = str
                     self.createSet( setName, file[0], cur, con)
+                elif ( res['code'] == 3 ) :
+                    print(res['message'] + "... updating DB")
+                    cur.execute("UPDATE files SET set_id = ? WHERE files_id = ?", (setId, file[0]))  
                 else :
                     self.reportError( res )
         except:
@@ -912,6 +969,7 @@ if __name__ == "__main__":
         #flick.displaySets()
         flick.removeUselessSetsTable()
         flick.getFlickrSets()
+        flick.convertRawFiles()
         flick.upload()
         flick.removeDeletedMedia()
         flick.createSets()
