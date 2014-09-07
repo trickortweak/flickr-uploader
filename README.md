@@ -4,11 +4,14 @@ flickr-uploader
 Upload a directory of media to Flickr to use as a backup to your local storage.
 
 ## Features:
-* Uploads images in full resolution to Flickr account (JPG, PNG, GIF)
+* Uploads images in full resolution to Flickr account (JPG, PNG...)
+* Reuploads modified images
+* Removes images from Flickr when they are removed from your local hard drive
+* Uploads videos (AVI, MOV, MPG, MP4, 3GP...)
 * Stores image information locally using a simple SQLite database
-* Automatically creates "Sets" based on the folder name the media is in
-* Ignores ".picasabackup" directory (for Picasa users)
-* Automatically removes images from Flickr when they are removed from your local hard drive
+* Creates "Sets" based on the folder name the media is in (getting existing sets from Flickr is managed also)
+* Ignores unwanted directories (like ".picasabackup" for Picasa users)
+* Convert RAW files (with an external tool)
 
 THIS SCRIPT IS PROVIDED WITH NO WARRANTY WHATSOEVER. PLEASE REVIEW THE SOURCE CODE TO MAKE SURE IT WILL WORK FOR YOUR NEEDS. IF YOU FIND A BUG, PLEASE REPORT IT.
 
@@ -23,7 +26,7 @@ Go to http://www.flickr.com/services/apps/create/apply and apply for an API key
 Edit the following variables in the uploadr.ini:
 
 
-* FILES_DIR = "files/"
+* FILES_DIR = "YourDir"
 * FLICKR = {
         "title"                 : "",
         "description"           : "",
@@ -34,9 +37,6 @@ Edit the following variables in the uploadr.ini:
         "api_key"               : "Yourkey",
         "secret"                : "YourSecret"
         }
-* SLEEP_TIME = 1 * 60
-* DRIP_TIME = 1 * 60
-* DB_PATH = os.path.join(FILES_DIR, "fickerdb")
 * FLICKR["api_key"] = ""
 * FLICKR["secret"] = ""
 

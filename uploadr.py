@@ -390,7 +390,11 @@ class Uploadr:
     def convertRawFiles( self ):
         """ convertRawFiles
         """
+<<<<<<< HEAD
         if CONVERT_RAW_FILES.lower() != "true":
+=======
+        if (not CONVERT_RAW_FILES):
+>>>>>>> 5b946271cd87b5acc48c342d8316baa0352bd7eb
             return
 
         print "*****Converting files*****"
