@@ -377,7 +377,7 @@ class Uploadr:
         coun = 0;
         for i, file in enumerate( allMedia ):
             success = self.uploadFile( file )
-            if args.drip_feed and success and i != len( newFiles )-1:
+            if args.drip_feed and success and i != len( allMedia )-1:
                 print("Waiting " + str(DRIP_TIME) + " seconds before next upload")
                 time.sleep( DRIP_TIME )
             coun = coun + 1;
