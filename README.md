@@ -17,7 +17,7 @@ THIS SCRIPT IS PROVIDED WITH NO WARRANTY WHATSOEVER. PLEASE REVIEW THE SOURCE CO
 
 ## Requirements:
 
-* Python 2.7+
+* Python 2.7+ (for DSM use: Official package from Synology does not work for HTTPS so use package from SynoCommunity)
 * File write access (for the token and local database)
 * Flickr API key (free)
 
