@@ -25,7 +25,6 @@ THIS SCRIPT IS PROVIDED WITH NO WARRANTY WHATSOEVER. PLEASE REVIEW THE SOURCE CO
 Go to http://www.flickr.com/services/apps/create/apply and apply for an API key
 Edit the following variables in the uploadr.ini:
 
-
 * FILES_DIR = "YourDir"
 * FLICKR = {
         "title"                 : "",
@@ -39,6 +38,9 @@ Edit the following variables in the uploadr.ini:
         }
 * FLICKR["api_key"] = ""
 * FLICKR["secret"] = ""
+
+Refer to https://www.flickr.com/services/api/upload.api.html for what each of the
+upload arguments above correspond to for Flickr's API.
 
 ## Usage
 Place the file uploadr.py in any directory and run (execution privs required):
