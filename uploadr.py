@@ -476,13 +476,13 @@ class Uploadr:
                     if args.description: # Replace
                         FLICKR["description"] = args.description
                     if args.tags: # Append
-                        FLICKR["tags"] += " " + args.tags + " "
+                        FLICKR["tags"] += " " + args.tags
                     d = {
                         "auth_token"    : str(self.token),
                         "perms"         : str(self.perms),
                         "title"         : str( FLICKR["title"] ),
                         "description"   : str( FLICKR["description"] ),
-                        "tags"          : str( FLICKR["tags"] + "," + setName ),
+                        "tags"          : str( FLICKR["tags"] + " " + setName ),
                         "is_public"     : str( FLICKR["is_public"] ),
                         "is_friend"     : str( FLICKR["is_friend"] ),
                         "is_family"     : str( FLICKR["is_family"] )
