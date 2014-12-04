@@ -80,6 +80,7 @@ import errno
 import subprocess
 from sys import stdout
 import itertools
+import re
 
 ##
 ## Read Config from config.ini file
@@ -96,6 +97,7 @@ DB_PATH = eval(config.get('Config','DB_PATH'))
 LOCK_PATH = eval(config.get('Config','LOCK_PATH'))
 TOKEN_PATH = eval(config.get('Config','TOKEN_PATH'))
 EXCLUDED_FOLDERS = eval(config.get('Config','EXCLUDED_FOLDERS'))
+IGNORED_REGEX = [re.compile(regex) for regex in eval(config.get('Config', 'IGNORED_REGEX'))]
 ALLOWED_EXT = eval(config.get('Config','ALLOWED_EXT'))
 RAW_EXT = eval(config.get('Config','RAW_EXT'))
 FILE_MAX_SIZE = eval(config.get('Config','FILE_MAX_SIZE'))
@@ -446,6 +448,8 @@ class Uploadr:
                 if curr_dir in dirnames:
                     dirnames.remove(curr_dir)
             for f in filenames :
+                if any(ignored.search(f) for ignored in IGNORED_REGEX):
+                    continue
                 ext = f.lower().split(".")[-1]
                 if ext in ALLOWED_EXT:
                     fileSize = os.path.getsize( dirpath + "/" + f )
