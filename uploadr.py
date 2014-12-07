@@ -373,11 +373,24 @@ class Uploadr:
         print("*****Uploading files*****")
 
         allMedia = self.grabNewFiles()
-        print("Found " + str(len(allMedia)) + " files")
+        # If managing changes, consider all files
+        if MANAGE_CHANGES:
+            changedMedia = allMedia
+        # If not, then get just the new and missing files
+        else:
+            con = lite.connect(DB_PATH)
+            with con:
+                cur = con.cursor()
+                cur.execute("SELECT path FROM files")
+                existingMedia = set(file[0] for file in cur.fetchall())
+                changedMedia = set(allMedia) - existingMedia
+                
+        changedMedia_count = len(changedMedia)
+        print("Found " + str(changedMedia_count) + " files")
         coun = 0;
-        for i, file in enumerate( allMedia ):
+        for i, file in enumerate( changedMedia ):
             success = self.uploadFile( file )
-            if args.drip_feed and success and i != len( allMedia )-1:
+            if args.drip_feed and success and i != changedMedia_count-1:
                 print("Waiting " + str(DRIP_TIME) + " seconds before next upload")
                 time.sleep( DRIP_TIME )
             coun = coun + 1;
@@ -436,6 +449,7 @@ class Uploadr:
             print ("Finished converting files with extension:" + ext + ".")
 
         print "*****Completed converting files*****"
+
     def grabNewFiles( self ):
         """ grabNewFiles
         """
