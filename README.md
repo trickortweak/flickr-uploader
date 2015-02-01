@@ -11,6 +11,7 @@ Upload a directory of media to Flickr to use as a backup to your local storage.
 * Stores image information locally using a simple SQLite database
 * Creates "Sets" based on the folder name the media is in (getting existing sets from Flickr is managed also)
 * Ignores unwanted directories (like ".picasabackup" for Picasa users)
+* Allows specific files to be ignored (via regular expressions)
 * Convert RAW files (with an external tool)
 
 THIS SCRIPT IS PROVIDED WITH NO WARRANTY WHATSOEVER. PLEASE REVIEW THE SOURCE CODE TO MAKE SURE IT WILL WORK FOR YOUR NEEDS. IF YOU FIND A BUG, PLEASE REPORT IT.
