@@ -72,7 +72,6 @@ import webbrowser
 import sqlite3 as lite
 import pprint
 import json
-from PIL import Image
 from xml.dom.minidom import parse
 import hashlib
 import fcntl
