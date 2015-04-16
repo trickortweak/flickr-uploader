@@ -530,7 +530,7 @@ class Uploadr:
                     con.commit()
                 if (row[6] != last_modified) :
                     fileMd5 = self.md5Checksum(file)
-                    if fileMd5 != str(row[4])):
+                    if (fileMd5 != str(row[4])) :
                         self.replacePhoto(file, row[1], fileMd5, last_modified, cur, con);
             return success
 
