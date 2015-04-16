@@ -525,7 +525,6 @@ class Uploadr:
                 except:
                     print(str(sys.exc_info()))
             elif (MANAGE_CHANGES):
-                doMd5 = True;
                 if (row[6] == None) :
                     cur.execute('UPDATE files SET last_modified = ? WHERE files_id = ?',(last_modified, row[1]))
                     con.commit()
