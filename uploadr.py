@@ -526,16 +526,13 @@ class Uploadr:
                     print(str(sys.exc_info()))
             elif (MANAGE_CHANGES):
                 doMd5 = True;
-            	if (row[6] != None) :
-                	if (row[6] == last_modified) :
-                		doMd5 = False;
-                else :
-                	cur.execute('UPDATE files SET last_modified = ? WHERE files_id = ?',(last_modified, row[1]))
-                	con.commit()
-                if (doMd5 == True) :
-                	fileMd5 = self.md5Checksum(file)
-                if (doMd5 == True and fileMd5 != str(row[4])):
-                    self.replacePhoto(file, row[1], fileMd5, last_modified, cur, con);
+                if (row[6] == None) :
+                    cur.execute('UPDATE files SET last_modified = ? WHERE files_id = ?',(last_modified, row[1]))
+                    con.commit()
+                if (row[6] != last_modified) :
+                    fileMd5 = self.md5Checksum(file)
+                    if fileMd5 != str(row[4])):
+                        self.replacePhoto(file, row[1], fileMd5, last_modified, cur, con);
             return success
 
     def replacePhoto ( self, file, file_id, fileMd5, last_modified, cur, con ) :
@@ -823,11 +820,11 @@ class Uploadr:
             cur.execute('PRAGMA user_version')
             row = cur.fetchone();
             if (row[0] == 0) :
-            	print('Adding last_modified column to database');
-            	cur = con.cursor()
-            	cur.execute('PRAGMA user_version="1"')
-            	cur.execute('ALTER TABLE files ADD COLUMN last_modified REAL');
-            	con.commit()
+                print('Adding last_modified column to database');
+                cur = con.cursor()
+                cur.execute('PRAGMA user_version="1"')
+                cur.execute('ALTER TABLE files ADD COLUMN last_modified REAL');
+                con.commit()
             con.close()
         except lite.Error, e:
             print("Error: %s" % e.args[0])
