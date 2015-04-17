@@ -385,10 +385,11 @@ class Uploadr:
                 cur.execute("SELECT path FROM files")
                 existingMedia = set(file[0] for file in cur.fetchall())
                 changedMedia = set(allMedia) - existingMedia
-                
+
         changedMedia_count = len(changedMedia)
         print("Found " + str(changedMedia_count) + " files")
         coun = 0;
+
         for i, file in enumerate( changedMedia ):
             success = self.uploadFile( file )
             if args.drip_feed and success and i != changedMedia_count-1:
@@ -396,9 +397,9 @@ class Uploadr:
                 time.sleep( DRIP_TIME )
             coun = coun + 1;
             if (coun%100 == 0):
-                print("   " + str(coun) + " files processed (uploaded or md5ed)")
+                print("   " + str(coun) + " files processed (uploaded, md5ed or timestamp checked)")
         if (coun%100 > 0):
-            print("   " + str(coun) + " files processed (uploaded or md5ed)")
+            print("   " + str(coun) + " files processed (uploaded, md5ed or timestamp checked)")
         print("*****Completed uploading files*****")
 
     def convertRawFiles( self ):
@@ -410,43 +411,43 @@ class Uploadr:
         print "*****Converting files*****"
         for ext in RAW_EXT:
             print ("About to convert files with extension:" + ext + " files.")
-        
+
             for dirpath, dirnames, filenames in os.walk( FILES_DIR, followlinks=True):
                 if '.picasaoriginals' in dirnames:
                     dirnames.remove('.picasaoriginals')
                 if  '@eaDir' in dirnames:
                     dirnames.remove('@eaDir')
                 for f in filenames :
-                    
+
                     fileExt = f.split(".")[-1]
                     filename = f.split(".")[0]
                     if ( fileExt.lower() == ext):
-                        
+
                         if (not os.path.exists(dirpath + "/" + filename + ".JPG")):
                             print("About to create JPG from raw "+ dirpath + "/" + f )
-                            
+
                             flag = ""
                             if ext is "cr2":
                                 flag = "PreviewImage"
                             else :
                                 flag = "JpgFromRaw"
-                            
+
                             command = RAW_TOOL_PATH +"exiftool -b -" + flag + " -w .JPG -ext " + ext + " -r '" + dirpath + "/" + filename + "." + fileExt + "'"
                             #print(command)
-                        
+
                             p = subprocess.call(command, shell=True)
-                        
+
                         if (not os.path.exists(dirpath + "/" + filename + ".JPG_original")):
                             print ("About to copy tags from "+ dirpath + "/" + f + " to JPG.")
-                        
+
                             command = RAW_TOOL_PATH + "exiftool -tagsfromfile '" + dirpath + "/" + f + "' -r -all:all -ext JPG '" + dirpath + "/" + filename + ".JPG'"
                             #print(command)
-                        
+
                             p = subprocess.call(command, shell=True)
-                        
+
                             print ("Finished copying tags.")
-            
-            
+
+
             print ("Finished converting files with extension:" + ext + ".")
 
         print "*****Completed converting files*****"
@@ -480,9 +481,10 @@ class Uploadr:
         con.text_factory = str
         with con:
             cur = con.cursor()
-            cur.execute("SELECT rowid,files_id,path,set_id,md5,tagged FROM files WHERE path = ?", (file,))
+            cur.execute("SELECT rowid,files_id,path,set_id,md5,tagged,last_modified FROM files WHERE path = ?", (file,))
             row = cur.fetchone()
 
+            last_modified = os.stat(file).st_mtime;
             if(row is None):
                 print("Uploading " + file + "...")
                 head, setName = os.path.split(os.path.dirname(file))
@@ -512,7 +514,7 @@ class Uploadr:
                     if ( not res == "" and res.documentElement.attributes['stat'].value == "ok" ):
                         print("Successfully uploaded the file: " + file)
                         # Add to set
-                        cur.execute('INSERT INTO files (files_id, path, md5, tagged) VALUES (?, ?, ?, 1)',(int(str(res.getElementsByTagName('photoid')[0].firstChild.nodeValue)), file, self.md5Checksum(file)))
+                        cur.execute('INSERT INTO files (files_id, path, md5, last_modified, tagged) VALUES (?, ?, ?, ?, 1)',(int(str(res.getElementsByTagName('photoid')[0].firstChild.nodeValue)), file, self.md5Checksum(file),last_modified))
                         success = True
                     else :
                         print("A problem occurred while attempting to upload the file: " + file)
@@ -523,12 +525,16 @@ class Uploadr:
                 except:
                     print(str(sys.exc_info()))
             elif (MANAGE_CHANGES):
-                fileMd5 = self.md5Checksum(file)
-                if (fileMd5 != str(row[4])):
-                    self.replacePhoto(file, row[1], fileMd5, cur, con);
+                if (row[6] == None) :
+                    cur.execute('UPDATE files SET last_modified = ? WHERE files_id = ?',(last_modified, row[1]))
+                    con.commit()
+                if (row[6] != last_modified) :
+                    fileMd5 = self.md5Checksum(file)
+                    if (fileMd5 != str(row[4])) :
+                        self.replacePhoto(file, row[1], fileMd5, last_modified, cur, con);
             return success
 
-    def replacePhoto ( self, file, file_id, fileMd5, cur, con ) :
+    def replacePhoto ( self, file, file_id, fileMd5, last_modified, cur, con ) :
         success = False
         print("Replacing the file: " + file + "...")
         try:
@@ -546,7 +552,7 @@ class Uploadr:
             if ( not res == "" and res.documentElement.attributes['stat'].value == "ok" ):
                 print("Successfully replaced the file: " + file)
                 # Add to set
-                cur.execute('UPDATE files SET md5 = ? WHERE files_id = ?',(fileMd5, file_id))
+                cur.execute('UPDATE files SET md5 = ?,last_modified = ? WHERE files_id = ?',(fileMd5, last_modified, file_id))
                 con.commit()
                 success = True
             else :
@@ -761,7 +767,7 @@ class Uploadr:
                     self.createSet( setName, file[0], cur, con)
                 elif ( res['code'] == 3 ) :
                     print(res['message'] + "... updating DB")
-                    cur.execute("UPDATE files SET set_id = ? WHERE files_id = ?", (setId, file[0]))  
+                    cur.execute("UPDATE files SET set_id = ? WHERE files_id = ?", (setId, file[0]))
                 else :
                     self.reportError( res )
         except:
@@ -806,7 +812,18 @@ class Uploadr:
             cur = con.cursor()
             cur.execute('create table if not exists files (files_id int, path text, set_id int, md5 text, tagged int)')
             cur.execute('create table if not exists sets (set_id int, name text, primary_photo_id INTEGER)')
+            cur.execute('create unique index if not exists fileindex on files (path)')
+            cur.execute('create index if not exists setsindex on sets (name)')
             con.commit()
+            cur = con.cursor()
+            cur.execute('PRAGMA user_version')
+            row = cur.fetchone();
+            if (row[0] == 0) :
+                print('Adding last_modified column to database');
+                cur = con.cursor()
+                cur.execute('PRAGMA user_version="1"')
+                cur.execute('ALTER TABLE files ADD COLUMN last_modified REAL');
+                con.commit()
             con.close()
         except lite.Error, e:
             print("Error: %s" % e.args[0])
