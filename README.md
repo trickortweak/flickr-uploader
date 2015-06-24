@@ -44,7 +44,7 @@ Refer to https://www.flickr.com/services/api/upload.api.html for what each of th
 upload arguments above correspond to for Flickr's API.
 
 ## Usage
-Place the file uploadr.py in any directory and run (execution privs required):
+Place the file uploadr.py in any directory and run via ssh (execution privs required):
 
 $ ./uploadr.py
 
@@ -64,5 +64,4 @@ It will crawl through all the files from the FILES_DIR directory and begin the u
 * A: Nope. It's a work in progress. I've tested it as needed for my needs, but it's possible to build additional features by contributing to the script.
 
 * Q: How to automate it with a Synology NAS ?
-* A: With DSM 5, create an automate task, make it run once a day for example, and put this in the textbox without quotes "/usr/local/python/bin/python path_to_your_script"
-for ie, "/usr/local/python/bin/python /volume1/script/flickr-uploader/uploadr.py"
+* A: First you will need to run script at least one time in a ssh client to get the token file then with DSM 5, create an automate task, make it run once a day for example, and put this in the textbox without quotes "path_to_your_python_program path_to_your_script". For example, assuming you installed Python package from Synocommunity, command should look like "/usr/local/python/bin/python /volume1/script/flickr-uploader/uploadr.py".
