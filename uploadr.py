@@ -103,6 +103,7 @@ FILE_MAX_SIZE = eval(config.get('Config','FILE_MAX_SIZE'))
 MANAGE_CHANGES = eval(config.get('Config','MANAGE_CHANGES'))
 RAW_TOOL_PATH = eval(config.get('Config','RAW_TOOL_PATH'))
 CONVERT_RAW_FILES = eval(config.get('Config','CONVERT_RAW_FILES'))
+FULL_SET_NAME = eval(config.get('Config','FULL_SET_NAME'))
 
 #print FILES_DIR
 #print FLICKR
@@ -487,7 +488,10 @@ class Uploadr:
             last_modified = os.stat(file).st_mtime;
             if(row is None):
                 print("Uploading " + file + "...")
-                head, setName = os.path.split(os.path.dirname(file))
+                if FULL_SET_NAME:
+                    setName = os.path.relpath(os.path.dirname(file), FILES_DIR)
+                else:
+                    head, setName = os.path.split(os.path.dirname(file))
                 try:
                     photo = ('photo', file, open(file,'rb').read())
                     if args.title: # Replace
@@ -718,7 +722,10 @@ class Uploadr:
             files = cur.fetchall()
 
             for row in files:
-                head, setName = os.path.split(os.path.dirname(row[1]))
+                if FULL_SET_NAME:
+                    setName = os.path.relpath(os.path.dirname(row[1]), FILES_DIR)
+                else:
+                    head, setName = os.path.split(os.path.dirname(row[1]))
                 newSetCreated = False
 
                 cur.execute("SELECT set_id, name FROM sets WHERE name = ?", (setName,))
@@ -761,7 +768,10 @@ class Uploadr:
             else :
                 if ( res['code'] == 1 ) :
                     print("Photoset not found, creating new set...")
-                    head, setName = os.path.split(os.path.dirname(file[1]))
+                    if FULL_SET_NAME:
+                        setName = os.path.relpath(os.path.dirname(file[1]), FILES_DIR)
+                    else:
+                        head, setName = os.path.split(os.path.dirname(file[1]))
                     con = lite.connect(DB_PATH)
                     con.text_factory = str
                     self.createSet( setName, file[0], cur, con)
@@ -858,7 +868,10 @@ class Uploadr:
 
             for row in files:
                 if(row[3] != 1) :
-                    head, setName = os.path.split(os.path.dirname(row[1]))
+                    if FULL_SET_NAME:
+                        setName = os.path.relpath(os.path.dirname(row[1]), FILES_DIR)
+                    else:
+                        head, setName = os.path.split(os.path.dirname(row[1]))
 
                     status = self.addTagToPhoto(row, setName, cur, con)
 
