@@ -470,6 +470,8 @@ class Uploadr:
                     fileSize = os.path.getsize( dirpath + "/" + f )
                     if (fileSize < FILE_MAX_SIZE):
                         files.append( os.path.normpath( dirpath + "/" + f ).replace("'", "\'") )
+                    else:
+                     print("Skipping file due to size restriction: " + ( os.path.normpath( dirpath + "/" + f ) ) )
         files.sort()
         return files
 
