@@ -552,7 +552,7 @@ class Uploadr:
                 if (row[6] != last_modified):
                     fileMd5 = self.md5Checksum(file)
                     if (fileMd5 != str(row[4])):
-                        self.replacePhoto(file, row[4], fileMd5, last_modified, cur, con);
+                        self.replacePhoto(file, row[1], row[4], fileMd5, last_modified, cur, con);
             return success
 
     def replacePhoto(self, file, file_id, oldFileMd5, fileMd5, last_modified, cur, con):
