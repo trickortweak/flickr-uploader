@@ -344,7 +344,7 @@ class Uploadr:
             rows = cur.fetchall()
 
             for row in rows:
-                if (not os.path.isfile(row[1])):
+                if (not os.path.isfile(row[1].decode('utf-8'))):
                     success = self.deleteFile(row, cur)
         print("*****Completed deleted files*****")
 
@@ -393,7 +393,7 @@ class Uploadr:
         for ext in RAW_EXT:
             print ("About to convert files with extension:" + ext + " files.")
 
-            for dirpath, dirnames, filenames in os.walk(FILES_DIR, followlinks=True):
+            for dirpath, dirnames, filenames in os.walk(unicode(FILES_DIR), followlinks=True):
                 if '.picasaoriginals' in dirnames:
                     dirnames.remove('.picasaoriginals')
                 if '@eaDir' in dirnames:
@@ -437,7 +437,7 @@ class Uploadr:
         """
 
         files = []
-        for dirpath, dirnames, filenames in os.walk(FILES_DIR, followlinks=True):
+        for dirpath, dirnames, filenames in os.walk(unicode(FILES_DIR), followlinks=True):
             for curr_dir in EXCLUDED_FOLDERS:
                 if curr_dir in dirnames:
                     dirnames.remove(curr_dir)
@@ -473,7 +473,7 @@ class Uploadr:
                 else:
                     head, setName = os.path.split(os.path.dirname(file))
                 try:
-                    photo = ('photo', file, open(file, 'rb').read())
+                    photo = ('photo', file.encode('utf-8'), open(file, 'rb').read())
                     if args.title:  # Replace
                         FLICKR["title"] = args.title
                     if args.description:  # Replace
@@ -559,7 +559,7 @@ class Uploadr:
         success = False
         print("Replacing the file: " + file + "...")
         try:
-            photo = ('photo', file, open(file, 'rb').read())
+            photo = ('photo', file.encode('utf-8'), open(file, 'rb').read())
 
             d = {
                 "auth_token": str(self.token),
@@ -630,7 +630,7 @@ class Uploadr:
 
     def deleteFile(self, file, cur):
         success = False
-        print("Deleting file: " + str(file[1]))
+        print("Deleting file: " + file[1].decode('utf-8'))
 
         try:
             d = {
