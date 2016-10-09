@@ -488,7 +488,7 @@ class Uploadr:
                         "title": str(FLICKR["title"]),
                         "description": str(FLICKR["description"]),
                         # replace commas to avoid tags conflicts
-                        "tags": '{} {} checksum:{}'.format(FLICKR["tags"], setName, file_checksum).replace(',', ''),
+                        "tags": '{} {} checksum:{}'.format(FLICKR["tags"], setName.encode('utf-8'), file_checksum).replace(',', ''),
                         "is_public": str(FLICKR["is_public"]),
                         "is_friend": str(FLICKR["is_friend"]),
                         "is_family": str(FLICKR["is_family"])
@@ -673,7 +673,7 @@ class Uploadr:
         return success
 
     def logSetCreation(self, setId, setName, primaryPhotoId, cur, con):
-        print("adding set to log: " + str(setName))
+        print("adding set to log: " + setName.decode('utf-8'))
 
         success = False
         cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)",
@@ -758,7 +758,7 @@ class Uploadr:
             print(e.code)
         except urllib2.URLError, e:
             print(e.args)
-        return json.loads(res)
+        return json.loads(res, encoding='utf-8')
 
     def run(self):
         """ run
@@ -794,13 +794,13 @@ class Uploadr:
 
                 if set == None:
                     setId = self.createSet(setName, row[0], cur, con)
-                    print("Created the set: " + setName)
+                    print("Created the set: " + setName.decode('utf-8'))
                     newSetCreated = True
                 else:
                     setId = set[0]
 
                 if row[2] == None and newSetCreated == False:
-                    print "adding file to set " + row[1]
+                    print("adding file to set " + row[1].decode('utf-8'))
                     self.addFileToSet(setId, row, cur)
         print('*****Completed creating sets*****')
 
@@ -844,7 +844,7 @@ class Uploadr:
             print(str(sys.exc_info()))
 
     def createSet(self, setName, primaryPhotoId, cur, con):
-        print("Creating new set: " + str(setName))
+        print("Creating new set: " + setName.decode('utf-8'))
 
         try:
             d = {
@@ -924,7 +924,7 @@ class Uploadr:
             unusedsets = cur.fetchall()
 
             for row in unusedsets:
-                print("Unused set spotted about to be deleted:" + str(row[0]) + "(" + row[1] + ")")
+                print("Unused set spotted about to be deleted: " + str(row[0]) + " (" + row[1].decode('utf-8') + ")")
                 cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
             con.commit()
 
@@ -965,7 +965,7 @@ class Uploadr:
                     cur.execute("SELECT set_id FROM sets WHERE set_id = '" + setId + "'")
                     foundSets = cur.fetchone()
                     if foundSets == None:
-                        print("   Adding set ", setId, setName, primaryPhotoId)
+                        print(u"Adding set #{0} ({1}) with primary photo #{2}".format(setId, setName, primaryPhotoId))
                         cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)",
                                     (setId, setName, primaryPhotoId))
                 con.commit()
