@@ -344,7 +344,7 @@ class Uploadr:
             rows = cur.fetchall()
 
             for row in rows:
-                if (not os.path.isfile(row[1])):
+                if (not os.path.isfile(row[1].decode('utf-8'))):
                     success = self.deleteFile(row, cur)
         print("*****Completed deleted files*****")
 
@@ -393,7 +393,7 @@ class Uploadr:
         for ext in RAW_EXT:
             print ("About to convert files with extension:" + ext + " files.")
 
-            for dirpath, dirnames, filenames in os.walk(FILES_DIR, followlinks=True):
+            for dirpath, dirnames, filenames in os.walk(unicode(FILES_DIR), followlinks=True):
                 if '.picasaoriginals' in dirnames:
                     dirnames.remove('.picasaoriginals')
                 if '@eaDir' in dirnames:
@@ -437,7 +437,7 @@ class Uploadr:
         """
 
         files = []
-        for dirpath, dirnames, filenames in os.walk(FILES_DIR, followlinks=True):
+        for dirpath, dirnames, filenames in os.walk(unicode(FILES_DIR), followlinks=True):
             for curr_dir in EXCLUDED_FOLDERS:
                 if curr_dir in dirnames:
                     dirnames.remove(curr_dir)
@@ -473,7 +473,7 @@ class Uploadr:
                 else:
                     head, setName = os.path.split(os.path.dirname(file))
                 try:
-                    photo = ('photo', file, open(file, 'rb').read())
+                    photo = ('photo', file.encode('utf-8'), open(file, 'rb').read())
                     if args.title:  # Replace
                         FLICKR["title"] = args.title
                     if args.description:  # Replace
@@ -488,7 +488,7 @@ class Uploadr:
                         "title": str(FLICKR["title"]),
                         "description": str(FLICKR["description"]),
                         # replace commas to avoid tags conflicts
-                        "tags": '{} {} checksum:{}'.format(FLICKR["tags"], setName, file_checksum).replace(',', ''),
+                        "tags": '{} {} checksum:{}'.format(FLICKR["tags"], setName.encode('utf-8'), file_checksum).replace(',', ''),
                         "is_public": str(FLICKR["is_public"]),
                         "is_friend": str(FLICKR["is_friend"]),
                         "is_family": str(FLICKR["is_family"])
@@ -559,7 +559,7 @@ class Uploadr:
         success = False
         print("Replacing the file: " + file + "...")
         try:
-            photo = ('photo', file, open(file, 'rb').read())
+            photo = ('photo', file.encode('utf-8'), open(file, 'rb').read())
 
             d = {
                 "auth_token": str(self.token),
@@ -630,7 +630,7 @@ class Uploadr:
 
     def deleteFile(self, file, cur):
         success = False
-        print("Deleting file: " + str(file[1]))
+        print("Deleting file: " + file[1].decode('utf-8'))
 
         try:
             d = {
@@ -673,7 +673,7 @@ class Uploadr:
         return success
 
     def logSetCreation(self, setId, setName, primaryPhotoId, cur, con):
-        print("adding set to log: " + str(setName))
+        print("adding set to log: " + setName.decode('utf-8'))
 
         success = False
         cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)",
@@ -758,7 +758,7 @@ class Uploadr:
             print(e.code)
         except urllib2.URLError, e:
             print(e.args)
-        return json.loads(res)
+        return json.loads(res, encoding='utf-8')
 
     def run(self):
         """ run
@@ -794,13 +794,13 @@ class Uploadr:
 
                 if set == None:
                     setId = self.createSet(setName, row[0], cur, con)
-                    print("Created the set: " + setName)
+                    print("Created the set: " + setName.decode('utf-8'))
                     newSetCreated = True
                 else:
                     setId = set[0]
 
                 if row[2] == None and newSetCreated == False:
-                    print "adding file to set " + row[1]
+                    print("adding file to set " + row[1].decode('utf-8'))
                     self.addFileToSet(setId, row, cur)
         print('*****Completed creating sets*****')
 
@@ -844,7 +844,7 @@ class Uploadr:
             print(str(sys.exc_info()))
 
     def createSet(self, setName, primaryPhotoId, cur, con):
-        print("Creating new set: " + str(setName))
+        print("Creating new set: " + setName.decode('utf-8'))
 
         try:
             d = {
@@ -924,7 +924,7 @@ class Uploadr:
             unusedsets = cur.fetchall()
 
             for row in unusedsets:
-                print("Unused set spotted about to be deleted:" + str(row[0]) + "(" + row[1] + ")")
+                print("Unused set spotted about to be deleted: " + str(row[0]) + " (" + row[1].decode('utf-8') + ")")
                 cur.execute("DELETE FROM sets WHERE set_id = ?", (row[0],))
             con.commit()
 
@@ -965,7 +965,7 @@ class Uploadr:
                     cur.execute("SELECT set_id FROM sets WHERE set_id = '" + setId + "'")
                     foundSets = cur.fetchone()
                     if foundSets == None:
-                        print("   Adding set ", setId, setName, primaryPhotoId)
+                        print(u"Adding set #{0} ({1}) with primary photo #{2}".format(setId, setName, primaryPhotoId))
                         cur.execute("INSERT INTO sets (set_id, name, primary_photo_id) VALUES (?,?,?)",
                                     (setId, setName, primaryPhotoId))
                 con.commit()
