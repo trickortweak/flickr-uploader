@@ -70,6 +70,7 @@ import errno
 import subprocess
 import re
 import ConfigParser
+from multiprocessing.pool import ThreadPool
 
 if sys.version_info < (2, 7):
     sys.stderr.write("This script requires Python 2.7 or newer.\n")
@@ -369,18 +370,24 @@ class Uploadr:
 
         changedMedia_count = len(changedMedia)
         print("Found " + str(changedMedia_count) + " files")
-        count = 0
 
-        for i, file in enumerate(changedMedia):
-            success = self.uploadFile(file)
-            if args.drip_feed and success and i != changedMedia_count - 1:
-                print("Waiting " + str(DRIP_TIME) + " seconds before next upload")
-                time.sleep(DRIP_TIME)
-            count = count + 1;
-            if (count % 100 == 0):
+
+        if args.processes:
+            pool = ThreadPool(processes=int(args.processes))
+            pool.map(self.uploadFile, changedMedia)
+        else:
+            count = 0
+            for i, file in enumerate(changedMedia):
+                success = self.uploadFile(file)
+                if args.drip_feed and success and i != changedMedia_count - 1:
+                    print("Waiting " + str(DRIP_TIME) + " seconds before next upload")
+                    time.sleep(DRIP_TIME)
+                count = count + 1;
+                if (count % 100 == 0):
+                    print("   " + str(count) + " files processed (uploaded, md5ed or timestamp checked)")
+            if (count % 100 > 0):
                 print("   " + str(count) + " files processed (uploaded, md5ed or timestamp checked)")
-        if (count % 100 > 0):
-            print("   " + str(count) + " files processed (uploaded, md5ed or timestamp checked)")
+
         print("*****Completed uploading files*****")
 
     def convertRawFiles(self):
@@ -1101,6 +1108,8 @@ if __name__ == "__main__":
                         help='Space-separated tags for uploaded files')
     parser.add_argument('-r', '--drip-feed', action='store_true',
                         help='Wait a bit between uploading individual files')
+    parser.add_argument('-p', '--processes',
+                        help='Number of photos to upload simultaneously')
     args = parser.parse_args()
 
     flick = Uploadr()
