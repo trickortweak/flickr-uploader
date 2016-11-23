@@ -463,6 +463,10 @@ class Uploadr:
         """ uploadFile
         """
 
+	if args.dry_run :
+		print("Dry Run Uploading " + file + "...")
+		return True
+
         success = False
         con = lite.connect(DB_PATH)
         con.text_factory = str
@@ -563,6 +567,11 @@ class Uploadr:
             return success
 
     def replacePhoto(self, file, file_id, oldFileMd5, fileMd5, last_modified, cur, con):
+
+        if args.dry_run :
+		print("Dry Run Replace file " + file + "...")
+                return True
+
         success = False
         print("Replacing the file: " + file + "...")
         try:
@@ -636,6 +645,11 @@ class Uploadr:
         return success
 
     def deleteFile(self, file, cur):
+
+        if args.dry_run :
+	        print("Deleting file: " + file[1].decode('utf-8'))
+                return True
+
         success = False
         print("Deleting file: " + file[1].decode('utf-8'))
 
@@ -777,7 +791,12 @@ class Uploadr:
             time.sleep(SLEEP_TIME)
 
     def createSets(self):
+
         print('*****Creating Sets*****')
+
+        if args.dry_run :
+                return True
+
 
         con = lite.connect(DB_PATH)
         con.text_factory = str
@@ -812,6 +831,10 @@ class Uploadr:
         print('*****Completed creating sets*****')
 
     def addFileToSet(self, setId, file, cur):
+
+        if args.dry_run :
+                return True
+
         try:
             d = {
                 "auth_token": str(self.token),
@@ -852,6 +875,10 @@ class Uploadr:
 
     def createSet(self, setName, primaryPhotoId, cur, con):
         print("Creating new set: " + setName.decode('utf-8'))
+
+        if args.dry_run :
+                return True
+
 
         try:
             d = {
@@ -922,6 +949,9 @@ class Uploadr:
     # Method to clean unused sets
     def removeUselessSetsTable(self):
         print('*****Removing empty Sets from DB*****')
+        if args.dry_run :
+                return True
+
 
         con = lite.connect(DB_PATH)
         con.text_factory = str
@@ -951,6 +981,9 @@ class Uploadr:
     # Get sets from Flickr
     def getFlickrSets(self):
         print('*****Adding Flickr Sets to DB*****')
+        if args.dry_run :
+                return True
+
         con = lite.connect(DB_PATH)
         con.text_factory = str
         try:
@@ -1110,7 +1143,10 @@ if __name__ == "__main__":
                         help='Wait a bit between uploading individual files')
     parser.add_argument('-p', '--processes',
                         help='Number of photos to upload simultaneously')
-    args = parser.parse_args()
+    parser.add_argument('-n', '--dry-run', action='store_true',
+                        help='Dry run')
+    args = parser.parse_args() 
+    print args.dry_run
 
     flick = Uploadr()
 
