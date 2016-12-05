@@ -49,6 +49,9 @@ Place the file uploadr.py in any directory and run via ssh (execution privs requ
 $ ./uploadr.py
 
 It will crawl through all the files from the FILES_DIR directory and begin the upload process.
+To check what files uploadr.py would upload and delete you can run the script withe option --dry-run:
+
+$ ./uploadr.py --dry-run
 
 ## Q&A
 * Q: Who is this script designed for?
