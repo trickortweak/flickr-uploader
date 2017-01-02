@@ -323,6 +323,24 @@ class Uploadr:
                 print(str(sys.exc_info()))
             return False
 
+    def removeIgnoredMedia(self):
+        print("*****Removing ignored files*****")
+
+        if (not self.checkToken()):
+            self.authenticate()
+        con = lite.connect(DB_PATH)
+        con.text_factory = str
+
+        with con:
+            cur = con.cursor()
+            cur.execute("SELECT files_id, path FROM files")
+            rows = cur.fetchall()
+
+            for row in rows:
+                if (self.isFileIgnored(row[1].decode('utf-8'))):
+                    success = self.deleteFile(row, cur)
+        print("*****Completed ignored files*****")
+
     def removeDeletedMedia(self):
         """ Remove files deleted at the local source
         loop through database
@@ -445,10 +463,10 @@ class Uploadr:
 
         files = []
         for dirpath, dirnames, filenames in os.walk(unicode(FILES_DIR), followlinks=True):
-            for curr_dir in EXCLUDED_FOLDERS:
-                if curr_dir in dirnames:
-                    dirnames.remove(curr_dir)
             for f in filenames:
+                filePath = os.path.join(dirpath, f)
+                if self.isFileIgnored(filePath):
+                    continue
                 if any(ignored.search(f) for ignored in IGNORED_REGEX):
                     continue
                 ext = os.path.splitext(os.path.basename(f))[1][1:].lower()
@@ -458,6 +476,13 @@ class Uploadr:
                         files.append(os.path.normpath(dirpath + "/" + f).replace("'", "\'"))
         files.sort()
         return files
+
+    def isFileIgnored(self, filename):
+        for excluded_dir in EXCLUDED_FOLDERS:
+            if excluded_dir in os.path.dirname(filename):
+                return True
+        
+        return False
 
     def uploadFile(self, file):
         """ uploadFile
@@ -1145,6 +1170,8 @@ if __name__ == "__main__":
                         help='Number of photos to upload simultaneously')
     parser.add_argument('-n', '--dry-run', action='store_true',
                         help='Dry run')
+    parser.add_argument('-g', '--remove-ignored', action='store_true',
+                        help='Remove previously uploaded files, now ignored')
     args = parser.parse_args() 
     print args.dry_run
 
@@ -1172,6 +1199,8 @@ if __name__ == "__main__":
         flick.convertRawFiles()
         flick.upload()
         flick.removeDeletedMedia()
+        if args.remove_ignored:
+            flick.removeIgnoredMedia()
         flick.createSets()
         flick.print_stat()
 
