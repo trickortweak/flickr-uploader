@@ -53,6 +53,11 @@ To check what files uploadr.py would upload and delete you can run the script wi
 
 $ ./uploadr.py --dry-run
 
+In case you've changed the EXCLUDED_FOLDERS setting in your INI file and want to remove any previously
+uploaded files that are now ignored, run the script with the option --remove-ignored
+
+$ ./uploadr.py --remove-ignored
+
 ## Q&A
 * Q: Who is this script designed for?
 * A: Those people comfortable with the command line that want to backup their media on Flickr in full resolution.
