@@ -3,6 +3,8 @@ flickr-uploader
 
 Upload a directory of media to Flickr to use as a backup to your local storage.
 
+Interesting in helping manage pull requests and issues? Open to collaborators requests since I no longer actively use this script.
+
 ## Features:
 * Uploads images in full resolution to Flickr account (JPG, PNG...)
 * Reuploads modified images
