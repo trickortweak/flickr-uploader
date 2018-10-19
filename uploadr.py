@@ -65,7 +65,7 @@ import sqlite3 as lite
 import json
 from xml.dom.minidom import parse
 import hashlib
-import fcntl
+import portalocker
 import errno
 import subprocess
 import re
@@ -1149,7 +1149,8 @@ if __name__ == "__main__":
     # Ensure that only once instance of this script is running
     f = open(LOCK_PATH, 'w')
     try:
-        fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+	portalocker.lock(f, portalocker.LOCK_EX | fcntl.LOCK_NB)
+        #fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError, e:
         if e.errno == errno.EAGAIN:
             sys.stderr.write('[%s] Script already running.\n' % time.strftime('%c'))
