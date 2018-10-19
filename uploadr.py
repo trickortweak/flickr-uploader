@@ -1149,7 +1149,7 @@ if __name__ == "__main__":
     # Ensure that only once instance of this script is running
     f = open(LOCK_PATH, 'w')
     try:
-	portalocker.lock(f, portalocker.LOCK_EX | fcntl.LOCK_NB)
+	portalocker.lock(f, portalocker.LOCK_EX | portalocker.LOCK_NB)
         #fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except IOError, e:
         if e.errno == errno.EAGAIN:
