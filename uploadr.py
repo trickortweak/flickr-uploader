@@ -65,7 +65,14 @@ import sqlite3 as lite
 import json
 from xml.dom.minidom import parse
 import hashlib
-import portalocker
+try:
+    # Use portalocker if available. Required for Windows systems
+    import portalocker as FileLocker  # noqa
+    FILELOCK = FileLocker.lock
+except ImportError:
+    # Use fcntl
+    import fcntl as FileLocker
+    FILELOCK = FileLocker.lockf
 import errno
 import subprocess
 import re
@@ -1146,16 +1153,18 @@ class Uploadr:
 
 print("--------- Start time: " + time.strftime("%c") + " ---------")
 if __name__ == "__main__":
-    # Ensure that only once instance of this script is running
-    f = open(LOCK_PATH, 'w')
+    # Ensure that only one instance of this script is running
     try:
-	portalocker.lock(f, portalocker.LOCK_EX | portalocker.LOCK_NB)
-        #fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except IOError, e:
-        if e.errno == errno.EAGAIN:
+        # FileLocker is an alias to portalocker (if available) or fcntl
+        FILELOCK(open(MY_CFG.LOCK_PATH, 'w'),
+                 FileLocker.LOCK_EX | FileLocker.LOCK_NB)
+    except IOError as err:
+        if err.errno == errno.EAGAIN:
             sys.stderr.write('[%s] Script already running.\n' % time.strftime('%c'))
             sys.exit(-1)
         raise
+    finally:
+        pass    
     parser = argparse.ArgumentParser(description='Upload files to Flickr.')
     parser.add_argument('-d', '--daemon', action='store_true',
                         help='Run forever as a daemon')
