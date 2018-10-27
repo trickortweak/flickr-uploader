@@ -4,6 +4,10 @@ flickr-uploader
 Upload a directory of media to Flickr to use as a backup to your local storage.
 
 Interested in helping manage pull requests and issues? I need one or more collaborators since I no longer actively use this script.
+* trickortweak was kind enough to add me as a contributor to this repository.
+* I will be maintaining it mostly to answer queries and to incorporate pull requests/changes from other contributors.
+* I do more activaley maintain this fork [flickr-uploader](https://github.com/oPromessa/flickr-uploader) also available [on pypi.org also](https://pypi.org/project/flickr-uploader/).
+
 
 ## Features:
 * Uploads images in full resolution to Flickr account (JPG, PNG...)
