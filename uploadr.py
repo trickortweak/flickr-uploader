@@ -1158,7 +1158,7 @@ if __name__ == "__main__":
     # Ensure that only one instance of this script is running
     try:
         # FileLocker is an alias to portalocker (if available) or fcntl
-        FILELOCK(open(MY_CFG.LOCK_PATH, 'w'),
+        FILELOCK(open(LOCK_PATH, 'w'),
                  FileLocker.LOCK_EX | FileLocker.LOCK_NB)
     except IOError as err:
         if err.errno == errno.EAGAIN:
